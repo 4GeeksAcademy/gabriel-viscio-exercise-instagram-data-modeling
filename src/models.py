@@ -7,26 +7,46 @@ from eralchemy2 import render_er
 
 Base = declarative_base()
 
-class Person(Base):
-    __tablename__ = 'person'
-    # Here we define columns for the table person
-    # Notice that each column is also a normal Python instance attribute.
+class User(Base):
+    __tablename__ = 'user'
     id = Column(Integer, primary_key=True)
-    name = Column(String(250), nullable=False)
+    username = Column(String(250), nullable=False)
+    firstname = Column(String(250), nullable=False)
+    lastname = Column(String(250), nullable=False)
+    email = Column(String(250), nullable=False)
+    posts = relationship("Post", back_populates="user")
+    comments = relationship("Comment", back_populates="author")
+    followers = relationship("Follower", foreign_keys="[Follower.user_id]")
+    following = relationship("Follower", foreign_keys="[Follower.follower_id]")
 
-class Address(Base):
-    __tablename__ = 'address'
-    # Here we define columns for the table address.
-    # Notice that each column is also a normal Python instance attribute.
+class Post(Base):
+    __tablename__ = 'post'
     id = Column(Integer, primary_key=True)
-    street_name = Column(String(250))
-    street_number = Column(String(250))
-    post_code = Column(String(250), nullable=False)
-    person_id = Column(Integer, ForeignKey('person.id'))
-    person = relationship(Person)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    url = Column(String(250), nullable=False)
+    text = Column(String(250), nullable=False)
+    user = relationship("User", back_populates="posts")
+    comments = relationship("Comment", back_populates="post")
 
-    def to_dict(self):
-        return {}
+class Follower(Base):
+    __tablename__ = 'follower'
+    id = Column(Integer, primary_key=True)
+    follower_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    follower = relationship("User", foreign_keys=[follower_id])
+    user = relationship("User", foreign_keys=[user_id])
+
+class Comment(Base):
+    __tablename__ = 'comment'
+    id = Column(Integer, primary_key=True)
+    comment_text = Column(String(250), nullable=False)
+    autor_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    post_id = Column(Integer, ForeignKey('post.id'), nullable=False)
+    author = relationship("User", back_populates="comments")
+    post = relationship("Post", back_populates="comments")
+
+def to_dict(self):
+    return {}
 
 ## Draw from SQLAlchemy base
 try:
